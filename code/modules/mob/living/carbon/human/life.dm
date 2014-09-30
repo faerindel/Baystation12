@@ -333,6 +333,13 @@
 		if(species && (species.flags & NO_BREATHE || species.flags & IS_SYNTHETIC)) return
 
 		var/datum/gas_mixture/environment = loc.return_air()
+
+		//-- Yes, debug world<<'s
+		world << "environment.total_moles: [environment.total_moles] - ref: [environment]"
+		for(var/gas_id in environment.gas)
+			world << "gas_id in environment = [gas_id] : [environment.gas[gas_id]]"
+		//--
+
 		var/datum/gas_mixture/breath
 
 		// HACK NEED CHANGING LATER
@@ -512,6 +519,23 @@
 		inhaled_gas_used = inhaling/6
 
 		breath.adjust_gas(breath_type, -inhaled_gas_used, update = 0) //update afterwards
+
+		//-----
+		//Reagent gas processing. Hopefully not as heavy as it seems
+		//With each inhalation comes a part of reagent gasses that could be in the air
+		//WELP, it seems that breathing it directly from room requires dozens of thousands of units?
+		for(var/gas_id in breath.gas)
+			world << "gas_id in breath.gas = [gas_id]"
+			if (!(gas_id in non_reagent_gasses))
+				//if (chemical_reagent_list[gas_id]) //Actually, not yet. Let chem code throw a warning() if something awful happens for now
+				var/datum/reagent/R = chemical_reagents_list[gas_id]
+				//breath.gas[gas_id] -> moles of gas_id
+				var/used_gas = breath.gas[gas_id]
+				src.reagents.add_reagent(gas_id, 100*used_gas * 1/R.moles_per_unit) //to handle_reactions() or not handle_reactions()...
+				breath.adjust_gas(gas_id, -used_gas, update = 0)
+				world << "I'm breathing! [gas_id] : [100*used_gas * 1/R.moles_per_unit] inhaling: [used_gas]"
+
+		//-----
 
 		if(exhale_type)
 			breath.adjust_gas_temp(exhale_type, inhaled_gas_used, bodytemperature, update = 0) //update afterwards

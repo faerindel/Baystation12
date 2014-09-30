@@ -49,6 +49,14 @@ datum
 						break // Don't bother adding ourselves to other reagent ids, it is redundant.
 
 		proc
+			//--
+			//Eh... Don't yell at me too hard, please ;_;
+			vaporize_reagents(var/datum/gas_mixture/receiver)
+				for(var/datum/reagent/R in reagent_list)
+					receiver.merge(R.vaporize_reagent())
+				clear_reagents()
+				return
+			//--
 
 			remove_any(var/amount=1)
 				var/total_transfered = 0

@@ -456,6 +456,20 @@ datum
 				holder.clear_reagents()
 				return
 
+		//--
+		//test reaction, vaporizes every reagent inside the holder
+		vaporsmoke
+			name = "Vapor smoke"
+			id = "vaporsmoke"
+			result = null
+			required_reagents = list("potassium" = 1, "lithium" = 1, "phosphorus" = 1)
+			result_amount = 0.4
+
+			on_reaction(var/datum/reagents/holder, var/created_volume)
+				var/turf/location = get_turf(holder.my_atom)
+				var/datum/gas_mixture/env = location.return_air()
+				holder.vaporize_reagents(env)
+
 		chloralhydrate
 			name = "Chloral Hydrate"
 			id = "chloralhydrate"

@@ -8,6 +8,10 @@
 //The reaction procs must ALWAYS set src = null, this detaches the proc from the object (the reagent)
 //so that it can continue working when the reagent is deleted while the proc is still active.
 
+//this should totally NOT be here, why is this here yet? This should be in _helpers/global_lists.dm right?
+//this is a list of gasses that should not convert to a reagent when breathing them. We don't want people with 800 nitrogen, 200 oxygen in their reagent datum, ok?
+//also gasses that do not have a reagent counterpart yet
+var/global/list/non_reagent_gasses = list("oxygen", "nitrogen", "phoron", "carbon_dioxide", "volatile_fuel", "sleeping_agent", "oxygen_agent_b")
 
 datum
 	reagent
@@ -25,6 +29,8 @@ datum
 		var/scannable = 0 //shows up on health analyzers
 		//var/list/viruses = list()
 		var/color = "#000000" // rgb: 0, 0, 0 (does not support alpha channels - yet!)
+		//--
+		var/moles_per_unit = 0.55 //how much moles of the gas are needed to create 1u of the reagent. 0.55 is moles of water in a centiliter.
 
 		proc
 			reaction_mob(var/mob/M, var/method=TOUCH, var/volume) //By default we have a chance to transfer some
@@ -91,6 +97,22 @@ datum
 
 			on_update(var/atom/A)
 				return
+
+			//--
+			//converts the reagent into a XGM gas, updates gas_data if needed. Returns a gas_mixture containing only the gas
+			//Not even sure if this should be. Maybe this should be entirely done at reagents holder level, maybe this should only update gas_data
+			vaporize_reagent()
+				if (!id in gas_data.gases)
+					gas_data.gases += id
+					gas_data.name[id] = src.name
+					gas_data.specific_heat[id] = 20  //default xgm_gas values
+					gas_data.molar_mass[id] = 0.032
+					//no overlay stuff for now, invisible mutagen cloud ahoy
+					gas_data.flags[id] = 0
+				var/datum/gas_mixture/gasmix = new
+				gasmix.adjust_gas(id, moles_per_unit)
+				gasmix.temperature = T20C //eh, is directly setting temp fine for initialization?
+				return gasmix
 
 
 

@@ -2,6 +2,44 @@
 #define LIQUID 2
 #define GAS 3
 
+//debug thingy to vaporise reagents to an air tank air_contents
+/obj/machinery/chem_vaporizer
+	name = "Chem vaporizer"
+	density = 1
+	anchored = 1
+	icon = 'icons/obj/chemical.dmi'
+	icon_state = "dispenser"
+	var/obj/item/weapon/reagent_containers/glass/beaker = null
+	var/obj/item/weapon/tank/tank = null
+
+/obj/machinery/chem_vaporizer/attackby(var/obj/item/weapon/W as obj, var/mob/user as mob)
+	if (istype(W, /obj/item/weapon/tank))
+		tank = W
+		user.drop_item()
+		W.loc = src
+		user << "You insert [W] in [src]"
+	else if (istype(W, /obj/item/weapon/reagent_containers/glass))
+		beaker = W
+		user.drop_item()
+		W.loc = src
+		user << "You insert [W] in [src]"
+	else
+		..()
+
+/obj/machinery/chem_vaporizer/attack_hand(mob/user as mob)
+	if (beaker && tank)
+		beaker.reagents.vaporize_reagents(tank.air_contents)
+		user << "Contents of the beaker have been vaporized into the tank"
+	if (beaker)
+		beaker.loc = src.loc
+		beaker = null
+	if (tank)
+		tank.loc = src.loc
+		tank = null
+//--
+
+
+
 /obj/machinery/chem_dispenser
 	name = "chem dispenser"
 	density = 1
